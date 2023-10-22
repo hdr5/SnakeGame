@@ -1,11 +1,20 @@
-from tkinter import *
 # the de facto way in Python to create Graphical User interfaces (GUIs)
+from tkinter import *
 import random
+
+# I found the problem that cause to stop the game after a few times.
+# The solution is:
+# Every time we change the direction of the snake it is saved ,
+# if you failed and start a new game - the snake will started from this direction
+# Every new game the snake start from point 0,0 and if it go to left (the problem occur with 'up' too) the value of x become to x-SPACE_SIZE
+# and in the function that check collisions x cant be smaller than 0
+# so it's going directly to GAME_OVER function
+# That's why we declare the direction for any new game to right.
 
 
 GAME_WIDTH = 700
 GAME_HEIGHT = 700
-SPEED = 50
+SPEED = 80
 SPACE_SIZE = 50  #size of every square in the board
 BODY_PARTS = 3
 SNAKE_COLOR = "green"
@@ -34,7 +43,18 @@ class Food:
         canvas.create_oval(x, y, x+SPACE_SIZE, y+SPACE_SIZE, fill=FOOD_COLOR, tag="food")
 
 
+def check_collisions(snake):
 
+    x, y = snake.coordinates[0]
+    # checking for collision with the borders
+    if x < 0 or x >= GAME_WIDTH:
+        return True
+    elif y < 0 or y >= GAME_HEIGHT:
+        return True
+    # checking for a collision between the snake's body and its head
+    for body_part in snake.coordinates[1:]:    # from index 1 to end
+        if body_part[0] == x and body_part[1] == y:
+            return True
 
 def next_turn(snake, food):
 
@@ -55,17 +75,81 @@ def next_turn(snake, food):
 
     snake.squares.insert(0, square)
 
+    if x == food.coordinates[0] and y == food.coordinates[1]:
+        global score
+        score+=1
+        label.config(text="Score:{}".format(score))
+        canvas.delete("food")
+        food = Food()
+    else:
+        del snake.coordinates[-1]
+
+        canvas.delete(snake.squares[-1])
+
+        del snake.squares[-1]
+    if check_collisions(snake):
+        game_over()
+        return
     window.after(SPEED, next_turn, snake, food)
 
+def game_over():
+
+    global highScore
+    if score > highScore:
+        highScore = score
+
+    canvas.delete(ALL)
+
+    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/4, fill='white', text='High Score:{}'.format(highScore), tag='highscore', font=('consolas', 25))
+    canvas.create_text(canvas.winfo_width()/2, canvas.winfo_height()/2, fill='yellow', text='GAME OVER', tag='gameover', font=('consolas', 70))
+
+    global btn
+    btn = Button(window, text='Try again', width=10,
+                 height=2,padx=5, font=('consolas',15), bd='4', command=new_game)
+    btn.place( relx=0.5, rely=0.7, anchor=CENTER)
+
 def change_direction(new_direction):
-    pass
+
+    global direction
+    if new_direction == 'left':
+        if direction != 'right':
+            direction = new_direction
+    if new_direction == 'right':
+        if direction != 'left':
+            direction = new_direction
+    if new_direction == 'up':
+        if direction != 'down':
+            direction = new_direction
+    if new_direction == 'down':
+        if direction != 'up':
+            direction = new_direction
+
+def new_game():
+
+    canvas.delete(ALL)
+    btn.destroy()
+
+    snake = Snake()
+    food = Food()
+
+    global direction
+    direction = 'right'
+
+    global score
+    score = 0
+
+    label.config(text="Score:{}".format(score))
+
+    next_turn(snake, food)
+
 
 window = Tk()
 window.title("Snake Game")
 window.resizable(False, False)
 
+highScore = 0
 score = 0
-direction = 'down'
+direction = 'right'
 
 label = Label(window, text="Score:{}".format(score), font=('consolas', 40))
 label.pack()
@@ -76,9 +160,9 @@ canvas.pack()
 window.eval('tk::PlaceWindow . center')
 
 window.bind('<Left>', lambda  event: change_direction('left'))
-window.bind('<Right>', lambda event: print('right'))
-window.bind('<Up>', lambda event: print('up'))
-window.bind('<Down>', lambda event: print('down'))
+window.bind('<Right>', lambda event: change_direction('right'))
+window.bind('<Up>', lambda event: change_direction('up'))
+window.bind('<Down>', lambda event: change_direction('down'))
 
 snake = Snake()
 food = Food()
@@ -86,5 +170,4 @@ food = Food()
 next_turn(snake, food)
 
 window.mainloop()
-
 
