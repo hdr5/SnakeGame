@@ -1,15 +1,5 @@
-# the de facto way in Python to create Graphical User interfaces (GUIs)
 from tkinter import *
 import random
-
-# I found the problem that cause to stop the game after a few times.
-# The solution is:
-# Every time we change the direction of the snake it is saved ,
-# if you failed and start a new game - the snake will started from this direction
-# Every new game the snake start from point 0,0 and if it go to left (the problem occur with 'up' too) the value of x become to x-SPACE_SIZE
-# and in the function that check collisions x cant be smaller than 0
-# so it's going directly to GAME_OVER function
-# That's why we declare the direction for any new game to right.
 
 
 GAME_WIDTH = 700
@@ -51,10 +41,11 @@ def check_collisions(snake):
         return True
     elif y < 0 or y >= GAME_HEIGHT:
         return True
-    # checking for a collision between the snake's body and its head
-    for body_part in snake.coordinates[1:]:    # from index 1 to end
+    # checking for a collision with the snake itself
+    for body_part in snake.coordinates[1:]:
         if body_part[0] == x and body_part[1] == y:
             return True
+
 
 def next_turn(snake, food):
 
@@ -69,9 +60,9 @@ def next_turn(snake, food):
     elif direction == "right":
         x += SPACE_SIZE
 
-    snake.coordinates.insert(0, (x, y)) # at index 0
+    snake.coordinates.insert(0, (x, y))
 
-    square = canvas.create_rectangle(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill= SNAKE_COLOR)
+    square = canvas.create_rectangle(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill=SNAKE_COLOR)
 
     snake.squares.insert(0, square)
 
@@ -159,7 +150,7 @@ canvas.pack()
 
 window.eval('tk::PlaceWindow . center')
 
-window.bind('<Left>', lambda  event: change_direction('left'))
+window.bind('<Left>', lambda event: change_direction('left'))
 window.bind('<Right>', lambda event: change_direction('right'))
 window.bind('<Up>', lambda event: change_direction('up'))
 window.bind('<Down>', lambda event: change_direction('down'))
